@@ -174,7 +174,7 @@ export function Characters() {
   return (
     <div className="flex h-full flex-col overflow-y-auto">
       <PageHeader title="Personagens" description="Personagens treinados com Soul ID para manter o mesmo rosto entre gerações.">
-        {hasSoul && (
+        {hasSoul && !!data?.length && (
           <Button variant="primary" size="md" onClick={() => setOpen(true)}>
             <Plus strokeWidth={2} /> Novo personagem
           </Button>
@@ -194,7 +194,7 @@ export function Characters() {
             <p className="text-sm text-fg">Nenhum personagem ainda.</p>
             <p className="text-sm text-fg-muted">Treine um com 5 a 20 fotos da mesma pessoa. Depois, escolha o personagem no chip &quot;Personagem&quot; do Studio em Imagem.</p>
             {hasSoul && (
-              <Button variant="secondary" size="sm" className="mt-2 w-fit" onClick={() => setOpen(true)}>
+              <Button variant="primary" size="sm" className="mt-2 w-fit" onClick={() => setOpen(true)}>
                 <Plus strokeWidth={2} /> Novo personagem
               </Button>
             )}

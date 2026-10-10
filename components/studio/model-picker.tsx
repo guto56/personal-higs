@@ -41,9 +41,11 @@ export function ModelPicker({ mode, subtype, value, onChange }: { mode: Mode; su
           {groups.length === 0 && <p className="px-3 py-6 text-center text-sm text-fg-subtle">Nenhum modelo.</p>}
           {groups.map(([family, models]) => (
             <div key={family} className="mb-1">
-              <div className="flex items-baseline justify-between gap-2 px-2 pb-0.5 pt-2">
-                <span className="text-2xs text-fg-subtle">{family}</span>
-              </div>
+              {models.length > 1 && (
+                <div className="flex items-baseline justify-between gap-2 px-2 pb-0.5 pt-2">
+                  <span className="text-2xs text-fg-subtle">{family}</span>
+                </div>
+              )}
               {models.map((m) => {
                 const active = m.id === value.id;
                 return (
