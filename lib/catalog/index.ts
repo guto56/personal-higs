@@ -88,7 +88,7 @@ export interface ChainAction {
   slotKind: "image" | "video";
 }
 
-export const CHAIN_ACTIONS: ChainAction[] = [
+const ALL_CHAIN_ACTIONS: ChainAction[] = [
   { id: "animate", label: "Animar esta imagem", mode: "video", subtype: "image", slotKind: "image" },
   { id: "first-frame", label: "Usar como primeiro frame", mode: "video", subtype: "frames", slotKind: "image" },
   { id: "edit-image", label: "Editar imagem", mode: "edit", subtype: "image", slotKind: "image" },
@@ -97,7 +97,9 @@ export const CHAIN_ACTIONS: ChainAction[] = [
   { id: "extend", label: "Estender vídeo", mode: "edit", subtype: "extend", slotKind: "video" },
   { id: "restyle", label: "Restyle", mode: "edit", subtype: "restyle", slotKind: "video" },
   { id: "edit-video", label: "Editar vídeo", mode: "edit", subtype: "video", slotKind: "video" },
-].filter((a) => MODES.some((m) => m.id === a.mode && m.subtypes.some((s) => s.id === a.subtype)));
+];
+
+export const CHAIN_ACTIONS: ChainAction[] = ALL_CHAIN_ACTIONS.filter((a) => MODES.some((m) => m.id === a.mode && m.subtypes.some((s) => s.id === a.subtype)));
 
 /** Escolhe o slot que recebe a mídia encadeada. */
 export function slotForChain(model: ModelDef, kind: "image" | "video") {
