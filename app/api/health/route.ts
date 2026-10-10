@@ -14,7 +14,9 @@ async function check<T>(fn: () => Promise<T>) {
     const v = await fn();
     return { ok: true, ms: Date.now() - t, value: v };
   } catch (e) {
-    return { ok: false, ms: Date.now() - t, error: e instanceof ApiError ? e.message : "Falhou." };
+    const msg = e instanceof ApiError ? e.message : e instanceof Error ? (e.cause instanceof Error ? e.cause.message : e.message) : "Falhou.";
+    // Rota autenticada: a mensagem técnica ajuda a diagnosticar (sem segredos; a URL do banco não é incluída).
+    return { ok: false, ms: Date.now() - t, error: msg.replace(/postgres(ql)?:\/\/\S+/g, "[url]").slice(0, 200) };
   }
 }
 
