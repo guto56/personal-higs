@@ -9,6 +9,13 @@ function sb() {
   return client;
 }
 
+/** Limite por arquivo do Supabase Storage (50 MB no plano gratuito). Acima disso, usa o storage da Higgsfield. */
+export const SUPABASE_MAX_BYTES = Number(process.env.SUPABASE_MAX_UPLOAD_MB || 50) * 1024 * 1024;
+
+/** Caminhos "hf:<url>" apontam para arquivos guardados no CDN da Higgsfield (sem cópia no Supabase). */
+export const isExternal = (path: string) => path.startsWith("hf:");
+export const externalUrl = (path: string) => path.slice(3);
+
 export const MEDIA_LIMITS = {
   image: { maxBytes: 30 * 1024 * 1024, mimes: ["image/jpeg", "image/png", "image/webp", "image/gif"] },
   video: { maxBytes: 500 * 1024 * 1024, mimes: ["video/mp4", "video/quicktime", "video/webm"] },
@@ -46,15 +53,20 @@ export const storage = {
     return data.signedUrl;
   },
   async signedUrl(path: string, expiresIn = 60 * 60 * 6, download?: string) {
+    if (isExternal(path)) return externalUrl(path);
     const { data, error } = await sb().storage.from(env.bucket).createSignedUrl(path, expiresIn, download ? { download } : undefined);
     if (error || !data) throw new Error(`storage.signedUrl: ${error?.message}`);
     return data.signedUrl;
   },
   async signedUrls(paths: string[], expiresIn = 60 * 60 * 6) {
-    if (paths.length === 0) return new Map<string, string>();
-    const { data, error } = await sb().storage.from(env.bucket).createSignedUrls(paths, expiresIn);
+    const out = new Map<string, string>();
+    for (const p of paths) if (isExternal(p)) out.set(p, externalUrl(p));
+    const internal = paths.filter((p) => !isExternal(p));
+    if (internal.length === 0) return out;
+    const { data, error } = await sb().storage.from(env.bucket).createSignedUrls(internal, expiresIn);
     if (error || !data) throw new Error(`storage.signedUrls: ${error?.message}`);
-    return new Map(data.filter((d) => d.signedUrl && d.path).map((d) => [d.path as string, d.signedUrl]));
+    for (const d of data) if (d.signedUrl && d.path) out.set(d.path, d.signedUrl);
+    return out;
   },
   /** Envia um corpo em streaming (resultados grandes não ficam inteiros em memória). */
   async uploadStream(path: string, body: ReadableStream<Uint8Array> | Uint8Array, contentType: string, size?: number) {
@@ -65,6 +77,10 @@ export const storage = {
     if (!res.ok) throw new Error(`storage.uploadStream ${res.status}: ${(await res.text()).slice(0, 200)}`);
   },
   async info(path: string) {
+    if (isExternal(path)) {
+      const r = await fetch(externalUrl(path), { method: "HEAD", cache: "no-store" });
+      return r.ok ? { size: Number(r.headers.get("content-length")) || null, mime: r.headers.get("content-type") } : null;
+    }
     const dir = path.split("/").slice(0, -1).join("/");
     const name = path.split("/").pop()!;
     const { data } = await sb().storage.from(env.bucket).list(dir, { search: name, limit: 1 });
@@ -72,7 +88,8 @@ export const storage = {
     return f ? { size: (f.metadata as { size?: number } | null)?.size ?? null, mime: (f.metadata as { mimetype?: string } | null)?.mimetype ?? null } : null;
   },
   async remove(paths: string[]) {
-    if (paths.length === 0) return;
-    await sb().storage.from(env.bucket).remove(paths);
+    const internal = paths.filter((p) => !isExternal(p));
+    if (internal.length === 0) return;
+    await sb().storage.from(env.bucket).remove(internal);
   },
 };

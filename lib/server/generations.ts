@@ -8,7 +8,7 @@ import { hf, outputsOf, type HfStatusResponse } from "@/lib/higgsfield/client";
 import { ApiError } from "./errors";
 import { env } from "./env";
 import { assertGenerationRateLimit } from "./rate-limit";
-import { extFor, storage } from "./storage";
+import { extFor, storage, SUPABASE_MAX_BYTES } from "./storage";
 
 export interface CreateGenerationInput {
   conversationId?: string | null;
@@ -213,8 +213,19 @@ export async function ingestOutputs(genId: string, r: HfStatusResponse) {
       if (!res.ok || !res.body) throw new Error(`download ${res.status}`);
       const mime = o.contentType || res.headers.get("content-type")?.split(";")[0] || (o.kind === "video" ? "video/mp4" : o.kind === "audio" ? "audio/mpeg" : "image/png");
       const size = Number(res.headers.get("content-length")) || undefined;
-      const path = `generations/${genId}/${i}.${extFor(mime, o.url)}`;
-      await storage.uploadStream(path, res.body, mime, size);
+      let path = `generations/${genId}/${i}.${extFor(mime, o.url)}`;
+      if (size && size > SUPABASE_MAX_BYTES) {
+        // Acima do limite do Supabase: mantém no CDN da Higgsfield (retenção mínima de 7 dias).
+        await res.body.cancel();
+        path = `hf:${o.url}`;
+      } else {
+        try {
+          await storage.uploadStream(path, res.body, mime, size);
+        } catch (e) {
+          if (!String(e).includes("413") && !String(e).includes("EntityTooLarge") && !String(e).includes("exceeded")) throw e;
+          path = `hf:${o.url}`;
+        }
+      }
       await db.insert(assets).values({ kind: o.kind, source: "generation", generationId: genId, position: i, storagePath: path, mime, size: size ?? null, originalUrl: o.url, uploaded: true });
     }
     await db.update(generations).set({ status: "completed", completedAt: new Date(), error: null }).where(eq(generations.id, genId));

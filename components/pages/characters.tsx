@@ -48,8 +48,8 @@ function NewCharacter({ open, onOpenChange }: { open: boolean; onOpenChange: (o:
       const u: Upload = { localId: crypto.randomUUID(), file, preview: URL.createObjectURL(file), status: "uploading" };
       setUploads((l) => [...l, u]);
       try {
-        const { assetId, uploadUrl } = await api<{ assetId: string; uploadUrl: string }>("/api/uploads", { method: "POST", json: { fileName: file.name, mime: file.type, size: file.size, kind: "image" } });
-        const r = await fetch(uploadUrl, { method: "PUT", headers: { "content-type": file.type, "x-upsert": "true" }, body: file });
+        const { assetId, uploadUrl, uploadHeaders } = await api<{ assetId: string; uploadUrl: string; uploadHeaders: Record<string, string> }>("/api/uploads", { method: "POST", json: { fileName: file.name, mime: file.type, size: file.size, kind: "image" } });
+        const r = await fetch(uploadUrl, { method: "PUT", headers: uploadHeaders, body: file });
         if (!r.ok) throw new Error("Falha no envio.");
         await api(`/api/uploads/${assetId}/complete`, { method: "POST" });
         setUploads((l) => l.map((x) => (x.localId === u.localId ? { ...x, status: "ready", assetId } : x)));

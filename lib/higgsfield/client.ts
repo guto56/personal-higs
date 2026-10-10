@@ -109,6 +109,10 @@ export const hf = {
   estimate(path: string, body: Record<string, unknown>) {
     return request<{ type: "estimate"; credits: string; usd: string } | { type: "description"; pricing_description: string }>("POST", `/estimate/${path}`, body);
   },
+  /** URL pré-assinada do storage da Higgsfield (para arquivos acima do limite do Supabase). */
+  uploadUrl(contentType: string) {
+    return request<{ public_url: string; upload_url: string; content_type: string; upload_headers: Record<string, string> }>("POST", "/files/generate-upload-url", { content_type: contentType });
+  },
   models() {
     return request<{ total: number; items: { slug: string }[] }>("GET", "/models");
   },

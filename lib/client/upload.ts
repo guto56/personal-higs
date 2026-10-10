@@ -53,12 +53,11 @@ export function validateFor(slot: SlotDef, file: File, meta: { duration?: number
   return null;
 }
 
-function putWithProgress(url: string, file: File, onProgress: (p: number) => void) {
+export function putWithProgress(url: string, file: File, headers: Record<string, string>, onProgress: (p: number) => void) {
   return new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", url);
-    xhr.setRequestHeader("content-type", file.type);
-    xhr.setRequestHeader("x-upsert", "true");
+    for (const [k, v] of Object.entries(headers)) xhr.setRequestHeader(k, v);
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
     xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`upload ${xhr.status}`)));
     xhr.onerror = () => reject(new Error("network"));
@@ -91,11 +90,11 @@ export async function uploadToSlot(file: File, slot: SlotDef) {
   store.addAttachment(base);
   if (error) return;
   try {
-    const { assetId, uploadUrl } = await api<{ assetId: string; uploadUrl: string }>("/api/uploads", {
+    const { assetId, uploadUrl, uploadHeaders } = await api<{ assetId: string; uploadUrl: string; uploadHeaders: Record<string, string> }>("/api/uploads", {
       method: "POST",
       json: { fileName: file.name, mime: file.type, size: file.size, kind, width: meta.width, height: meta.height, duration: meta.duration },
     });
-    await putWithProgress(uploadUrl, file, (p) => useComposer.getState().updateAttachment(localId, { progress: p }));
+    await putWithProgress(uploadUrl, file, uploadHeaders, (p) => useComposer.getState().updateAttachment(localId, { progress: p }));
     await api<{ asset: AssetDTO }>(`/api/uploads/${assetId}/complete`, { method: "POST" });
     useComposer.getState().updateAttachment(localId, { status: "ready", progress: 1, assetId });
   } catch (e) {
