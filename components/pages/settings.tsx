@@ -79,7 +79,7 @@ export function SettingsPage() {
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-4xl px-4 pb-16 sm:px-6">
-        <PageHeader title="Configurações" />
+        <PageHeader title="Configurações" className="px-0 sm:px-0" />
         <div className="px-0 sm:px-0">
           <Section title="Conexão" description="Teste das conexões usadas pelo servidor.">
             <div className="flex flex-col divide-y divide-border rounded-lg border border-border px-3">

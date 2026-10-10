@@ -93,6 +93,7 @@
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+@layer base {
 html,
 body {
   background: var(--bg);
@@ -127,6 +128,7 @@ body {
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--surface-3) transparent;
+}
 }
 
 .shimmer {
