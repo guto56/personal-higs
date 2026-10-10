@@ -7,6 +7,8 @@ import { Menu as MenuIcon, PanelLeftOpen, Plus, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUI } from "@/lib/client/ui-store";
 import { useGenerationPoller } from "@/lib/client/queries";
+import { useComposer } from "@/lib/client/composer-store";
+import { api } from "@/lib/client/api";
 import { IconButton } from "@/components/ui/icon-button";
 import { Sidebar } from "./sidebar";
 import { CommandPalette } from "./command-palette";
@@ -35,6 +37,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const online = useOnline();
   useGenerationPoller();
+
+  // Modelos padrão salvos em Configurações valem entre dispositivos (o local tem prioridade).
+  useEffect(() => {
+    api<{ defaultModels?: Record<string, string> }>("/api/settings")
+      .then((r) => {
+        if (!r.defaultModels) return;
+        const local = useComposer.getState().modelBySub;
+        useComposer.setState({ modelBySub: { ...r.defaultModels, ...local } });
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => setMobile(false), [pathname, setMobile]);
 
