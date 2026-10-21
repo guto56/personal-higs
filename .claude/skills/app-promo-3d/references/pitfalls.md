@@ -20,10 +20,18 @@ Todos aconteceram no comercial do Spotify (30 s). Os que estão marcados como re
   - O motor marca `window.__lost` quando o contexto cai, e a captura reinicia o navegador.
 
 ## 3. Render lento: 2,4 s por quadro (resolvido)
-- **Medição:** o custo não estava no layout, e sim em dois pontos:
-  - **O print com composição por GPU emulada.** Corrigido com `--disable-gpu-compositing` em `_common.py` (cartela final: 2,4 s → 0,16 s).
-  - **O WebGL desenhando o vidro do celular com clearcoat sobre o quadro inteiro nos closes.** O motor agora não renderiza o 3D quando a tela cobre o quadro (`coverMargin > 2`): 2,4 s → 0,1–0,2 s.
-- **Ainda caro:** `backdrop-filter` grande sobre o 3D, como o card de vidro do DJ (~2 s). Use em trechos curtos.
+Medido com cronômetro dentro da página (`gl.readPixels` para sincronizar):
+
+| Causa | Correção | Resultado |
+|---|---|---|
+| Print com composição por GPU emulada | `--disable-gpu-compositing` em `_common.py` | cartela: 2,4 s → 0,16 s |
+| WebGL desenhando o celular nos closes | não renderizar o 3D quando a tela HTML cobre o quadro (`coverMargin > 2`) | 2,4 s → 0,1–0,2 s |
+| Reflexos (IBL) do clearcoat em todas as peças | materiais convertidos para `MeshStandardMaterial` | metade do custo |
+| Peças da traseira (lentes, vidro traseiro, platô da câmera) sombreadas mesmo escondidas, porque o SwiftShader não descarta cedo pela profundidade | esconder essas peças quando a câmera vê a frente | close médio: 2,5 s → 0,9 s |
+
+- **Paralelismo não ajuda:** o SwiftShader já usa todos os núcleos num processo só. Com 1, 2 e 4 processos o tempo foi o mesmo, por isso o padrão é 2, que só dilui o tempo de abrir o navegador.
+- **Ainda caro:** `backdrop-filter` grande sobre o 3D, como o card de vidro do DJ (~2 s). Use em trechos curtos ou troque por gradiente semitransparente.
+- **Na hora de matar processos:** `pkill -f <padrão>` mata o próprio shell, que contém o padrão na linha de comando. Use `pgrep … | xargs kill` num comando separado ou mate pelo PID.
 
 ## 4. Motion blur com "fantasma" (resolvido)
 - **Antes:** 60 qps com média de 2 quadros (`tmix`) dava obturador de 360° com só 2 amostras e imagem dupla em panorâmicas rápidas.

@@ -106,7 +106,9 @@ Arquivos disponíveis (`assets/sfx`):
 - **Música:** fica em 0,9. A mixagem aplica limitador e normalização.
 
 ## Desempenho
-Medido com SwiftShader, sem GPU.
-- **Close de tela:** ~0,1–0,2 s por quadro (o WebGL é pulado).
-- **Plano aberto com o celular:** ~0,7–1 s.
+Medido com SwiftShader, sem GPU, depois das otimizações do motor.
+- **Close de tela:** 0,1–0,2 s por quadro (o WebGL é pulado).
+- **Close médio, com o celular enchendo o quadro:** ~0,9 s.
+- **Plano aberto:** ~0,4 s.
 - **Vidro com `backdrop-filter` grande sobre o 3D:** ~2 s. Use pouco.
+- **Processos:** 2 por padrão; mais não acelera.

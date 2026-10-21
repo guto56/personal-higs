@@ -52,7 +52,7 @@ Edite `<proj>/index.html`. A API do motor está em `references/engine.md`.
 - Rode também `npx --yes hyperframes@0.8.181 check` como checagem extra de layout e contraste. Falsos positivos de páginas cobertas somem escondendo o que está sob folhas opacas.
 
 ### 7. Render
-- `run.sh capture.py <proj>`: o padrão `mb30+p60` captura 5 subquadros por quadro de 30 qps (30 s = 4500 capturas). A 1,2–2 capturas/s em 4 núcleos (closes rápidos, planos abertos com 3D mais lentos), isso dá ~40–60 min. É retomável. Para economizar ~20%, use `--mode mb30` (sem a versão 60 qps).
+- `run.sh capture.py <proj>`: o padrão `mb30+p60` captura 5 subquadros por quadro de 30 qps (30 s = 4500 capturas). A ~2 capturas/s (medido: 12 s de vídeo em 16 min, montagem incluída), 30 s levam ~40 min. É retomável. Para economizar ~20%, use `--mode mb30` (sem a versão 60 qps).
 - Para revisar rápido, use `--mode draft` (30 qps sem blur) e `--range 8,12` para só um trecho.
 - Rode em segundo plano e acompanhe as linhas de progresso. Não use `hyperframes render`: ele trava com WebGL por software.
 

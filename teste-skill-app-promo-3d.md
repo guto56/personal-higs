@@ -42,5 +42,5 @@ Entregue: MP4 30 qps com motion blur, MP4 60 qps e a folha de quadros. Antes do 
   7. capture;
   8. mix;
   9. assemble.
-- Tempo de render: 1,2–2 capturas/s neste contêiner. 20 s = 3000 capturas ≈ 25–40 min.
+- Tempo de render: ~2 capturas/s neste contêiner. 20 s = 3000 capturas ≈ 25–30 min com a montagem.
 - Se respeita a marca: logo de uma cor só e nenhum dado pessoal.

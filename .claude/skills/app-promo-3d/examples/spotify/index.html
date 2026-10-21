@@ -559,7 +559,7 @@
   var sweepL = new THREE.PointLight(0x46ff9a, 0, 7); scene.add(sweepL);
 
   var phoneGrp = new THREE.Group(); scene.add(phoneGrp);
-  var glassMesh = null, dispLocal = null, model = null;
+  var glassMesh = null, dispLocal = null, model = null, backParts = [];
 
   function alignScreenToMinusZ(root) {
     var front = root.getObjectByName("front-glass"), back = root.getObjectByName("rear-window");
@@ -823,6 +823,8 @@
     var fxo = track(T, CAM_FX);
     if (Math.abs(fxo) > 1e-4) camera.setViewOffset(W, H, -fxo * W, 0, W, H); else camera.clearViewOffset();
     camera.updateMatrixWorld(true);
+    var fwdv = new THREE.Vector3(0, 0, -1).applyQuaternion(phoneGrp.quaternion), front = fwdv.dot(camera.position.clone().sub(phoneGrp.position).normalize()) > 0.35;
+    backParts.forEach(function (m) { m.visible = !front; });
 
     // luzes e fundo
     var flood = sstep(DROP - 0.01, DROP + 0.25, T) * (1 - sstep(13.5, 14.2, T));
@@ -1069,10 +1071,12 @@
       m.traverse(function (ch) {
         if (!ch.isMesh) return;
         var nm = ch.material && ch.material.name || "";
-        if (ch.name.indexOf("front-glass") === 0) { glassMesh = ch; ch.material = new THREE.MeshPhysicalMaterial({ color: 0x010101, metalness: 0, roughness: 0.08, clearcoat: 1, clearcoatRoughness: 0.05 }); }
-        else if (/aluminium|antenna|ceramic-shield-back|lens-ring|apple-logo/.test(nm)) {
-          var mt = ch.material.clone(); mt.color.setHex(/antenna/.test(nm) ? 0x0c0d0e : 0x1b1d20); mt.metalness = 0.92; mt.roughness = 0.32; ch.material = mt;
-        }
+        // desempenho com WebGL por software: vidro barato desenhado primeiro, sem clearcoat, traseira escondida de frente
+        if (ch.name.indexOf("front-glass") === 0) { glassMesh = ch; ch.renderOrder = -5; ch.material = new THREE.MeshStandardMaterial({ color: 0x020203, metalness: 0.2, roughness: 0.12, envMapIntensity: 0.6 }); return; }
+        var src = ch.material, mt = new THREE.MeshStandardMaterial({ color: src.color, map: src.map, metalness: src.metalness, roughness: src.roughness, normalMap: src.normalMap, transparent: src.transparent, opacity: src.opacity, side: THREE.FrontSide });
+        if (/aluminium|antenna|ceramic-shield-back|lens-ring|apple-logo/.test(nm)) { mt.color = new THREE.Color(/antenna/.test(nm) ? 0x0c0d0e : 0x1b1d20); mt.metalness = 0.92; mt.roughness = 0.32; }
+        ch.material = mt;
+        if (/rear-window|camera-plateau|lens-|flash-|lidar|apple-logo/.test(ch.name)) backParts.push(ch);
       });
       alignScreenToMinusZ(m);
       phoneGrp.add(m); model = m;

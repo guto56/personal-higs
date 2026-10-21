@@ -205,7 +205,7 @@
         "float vig=smoothstep(1.15,0.35,length((p-0.5)*vec2(1.25,1.0)));c*=mix(0.35,1.0,vig);c*=1.0-uDark;gl_FragColor=vec4(c,1.0);}"
       ].join("\n")
     }));
-    bg.frustumCulled = false; bg.renderOrder = -10; scene.add(bg);
+    bg.frustumCulled = false; bg.renderOrder = -10; scene.add(bg); this.bgMesh = bg;
 
     // piso brilhante com borda que some (envMapIntensity baixo: evita manchas de luz no rodapé)
     if (o.floor !== false) {
@@ -213,7 +213,7 @@
       var fg = fx.createRadialGradient(128, 128, 10, 128, 128, 128); fg.addColorStop(0, "#fff"); fg.addColorStop(0.45, "#888"); fg.addColorStop(1, "#000");
       fx.fillStyle = fg; fx.fillRect(0, 0, 256, 256);
       var floor = new THREE.Mesh(new THREE.PlaneGeometry(26, 26), new THREE.MeshStandardMaterial({ color: 0x050706, metalness: 0.45, roughness: 0.6, transparent: true, alphaMap: new THREE.CanvasTexture(fa), envMapIntensity: 0.12 }));
-      floor.rotation.x = -PI / 2; floor.position.y = -2.05; scene.add(floor);
+      floor.rotation.x = -PI / 2; floor.position.y = -2.05; scene.add(floor); this.floor = floor;
     }
     scene.add(new THREE.AmbientLight(0x223328, 0.6));
     var key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(-3, 4, 5); scene.add(key);
@@ -234,14 +234,19 @@
         m.traverse(function (ch) {
           if (!ch.isMesh) return;
           var nm = (ch.material && ch.material.name) || "";
-          if (ch.name.indexOf("front-glass") === 0) { self.glass = ch; ch.material = new THREE.MeshPhysicalMaterial({ color: 0x010101, metalness: 0, roughness: 0.08, clearcoat: 1, clearcoatRoughness: 0.05 }); }
-          else if (/aluminium|antenna|ceramic-shield-back|lens-ring|apple-logo/.test(nm)) {
-            var mt = ch.material.clone(); mt.color.setHex(/antenna/.test(nm) ? 0x0c0d0e : bodyCol); mt.metalness = 0.92; mt.roughness = 0.32; ch.material = mt;
-          }
+          // desempenho (WebGL por software): o vidro é desenhado primeiro e é barato — a tela HTML cobre quase tudo dele,
+          // e a profundidade gravada descarta cedo o corpo atrás. Materiais com clearcoat viram Standard (metade do custo de reflexo).
+          if (ch.name.indexOf("front-glass") === 0) { self.glass = ch; ch.renderOrder = -5; ch.material = new THREE.MeshStandardMaterial({ color: 0x020203, metalness: 0.2, roughness: 0.12, envMapIntensity: 0.6 }); return; }
+          var src = ch.material, mt = new THREE.MeshStandardMaterial({ color: src.color, map: src.map, metalness: src.metalness, roughness: src.roughness, normalMap: src.normalMap, transparent: src.transparent, opacity: src.opacity, side: THREE.FrontSide });
+          if (/aluminium|antenna|ceramic-shield-back|lens-ring|apple-logo/.test(nm)) { mt.color = new THREE.Color(/antenna/.test(nm) ? 0x0c0d0e : bodyCol); mt.metalness = 0.92; mt.roughness = 0.32; }
+          ch.material = mt;
         });
         // a tela do modelo precisa olhar para -Z no espaço do modelo (o grupo gira PI e ela encara a câmera)
         var front = m.getObjectByName("front-glass"), back = m.getObjectByName("rear-window");
         if (front && back) { m.updateWorldMatrix(true, true); var fp = new THREE.Vector3(), bp = new THREE.Vector3(); front.getWorldPosition(fp); back.getWorldPosition(bp); if (fp.z > bp.z) m.rotation.y += PI; }
+        // peças da traseira: escondidas quando a câmera vê a frente (o WebGL por software não descarta cedo o que está atrás)
+        self.backParts = [];
+        m.traverse(function (ch) { if (ch.isMesh && /rear-window|camera-plateau|lens-|flash-|lidar|apple-logo/.test(ch.name)) self.backParts.push(ch); });
         self.phone.add(m);
         // retângulo do display (proporção SW:SH) dentro do vidro, no espaço local do vidro
         var g = self.glass.geometry; g.computeBoundingBox(); var bb = g.boundingBox;
@@ -291,6 +296,11 @@
     var fx = cam.fx || 0;
     if (Math.abs(fx) > 1e-4) camera.setViewOffset(this.W, this.H, -fx * this.W, 0, this.W, this.H); else camera.clearViewOffset();
     camera.updateMatrixWorld(true);
+    // frente do celular = -Z local do grupo girado (ry=0 olha para +Z do mundo)
+    var fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(this.phone.quaternion).multiplyScalar(-1);
+    var toCam = camera.position.clone().sub(this.phone.position).normalize();
+    var front = fwd.dot(toCam) > 0.35;
+    for (var bi = 0; bi < this.backParts.length; bi++) this.backParts[bi].visible = !front;
     this.bg.uTime.value = T;
     var pp = this.project(new THREE.Vector3(0, 0, 0)); this.bg.uGlowPos.value.set(pp[0] / this.W, 1 - pp[1] / this.H);
     var dst = [], ok = true;

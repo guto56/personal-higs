@@ -8,7 +8,7 @@ Grade de tempo: índice i em 240 qps (t = i/240). Modos:
   draft  30 qps sem blur, para revisar rápido → i = 8n
   (padrão: mb30+p60, que reaproveita os subquadros: i = 8n+0..4)
 
-uso: run.sh capture.py <projeto> [--mode mb30+p60] [--workers 4] [--range 0,30] [--batch 30]
+uso: run.sh capture.py <projeto> [--mode mb30+p60] [--workers 2] [--range 0,30] [--batch 30]
 Quadros em <projeto>/.build/frames/f<i>.jpg. Rodar de novo continua de onde parou.
 """
 import argparse, asyncio, json, multiprocessing as mp, os, sys, time
@@ -81,7 +81,8 @@ def worker(args):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("project"); ap.add_argument("--mode", default="mb30+p60")
-    ap.add_argument("--workers", type=int, default=max(1, min(4, os.cpu_count() or 2)))
+    # o SwiftShader já usa todos os núcleos num processo só: mais de 2 processos não acelera (medido 1/2/4 = mesmo tempo)
+    ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--range", default=None, help="início,fim em segundos")
     ap.add_argument("--batch", type=int, default=30)
     ap.add_argument("--duration", type=float, default=None)
