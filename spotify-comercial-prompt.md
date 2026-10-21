@@ -107,20 +107,44 @@
 - Linha minúscula embaixo: *"Peça conceitual — estudo"*.
 - A música faz fade-out até 30,0.
 
-## 5. Especificações de UI (reconstruir em HTML, sem gravação de tela)
+## 5. Referências reais do app (prints do iPhone, em `/home/user/hf-studio/spotify-ad/refs`)
+
+| Tela | Print | Cena | O que reproduzir |
+|---|---|---|---|
+| Início | `01-home.png` | Splash → busca | Chips no topo; grade 2×4 de atalhos com capa à esquerda; seções "Mais do que você curte" / "Volte a ouvir" |
+| Buscar | `02-search.png` | Busca | Título "Buscar" + câmera; barra **branca** "O que você quer ouvir?"; cards de categoria |
+| Buscar (digitando) | `03-search-typing.png` | Digitação + zoom | Campo `#313131` com cursor verde, "Cancelar"; "Buscas recentes" com check verde; teclado iOS 26 em liquid glass |
+| Sua Biblioteca | `04-library.png` | Transição para playlist | Chips de filtro, lista com capas grandes, "Recentes" |
+| Tocando agora | `05-now-playing.png` | DROP / player | Capa grande, linha da letra sobre a capa, barra de progresso, controles brancos, botão play circular branco, aba "Letra" |
+| Playlist | `06-playlist.png` | DJ / playlist por IA | Fundo em gradiente da cor da capa, mosaico 2×2, título grande, "saves · duração", botão play verde grande, lista com check verde |
+
+**Cores medidas nos prints:**
+- **Fundo e superfícies:** fundo `#121212`; chips e linhas `#292929`/`#313131`; texto secundário `#B3B3B3`.
+- **Verdes e controles:** verde `#1ED760` (chip ativo, play, checks); mini player `#505868` (cinza-azulado translúcido); azul do teclado `#3478F6`.
+- **Cards de categoria:** Música `#D81489`, Podcasts `#5F7F0A`, Audiolivros `#283EA3`, Eventos ao vivo `#8D67AB`.
+
+**Idioma:** os prints estão em inglês; no comercial a interface fica em **pt-BR**, com os rótulos do app em português:
+- **Abas:** Início, Buscar, Sua Biblioteca, Criar;
+- **Chips:** Tudo, Música, Podcasts, Audiolivros;
+- **Busca:** "O que você quer ouvir?", "Buscas recentes", "Cancelar".
+
+**Privacidade:** o avatar, o nome de usuário, as playlists e os artistas reais dos prints **não entram**. Tudo vira conteúdo fictício (artistas, capas, nomes).
+
+## 6. Especificações de UI (reconstruir em HTML, sem gravação de tela)
 
 - **Fundo do app:** `#121212`; cards `#1F1F1F`; texto principal branco, secundário `#B3B3B3`; destaque `#1ED760`.
 - **Liquid glass:** blur do fundo + refração (shader do bloco `vfx-liquid-glass`), borda clara de 1–1,5 px, brilho especular que se move com a câmera.
 - **Ponteiro de toque:** círculo cinza translúcido (~44 px) que encolhe no toque e deixa uma ondulação.
 - **Tipografia:** Figtree 400 (corpo), 700 (títulos), 900 (números do Wrapped).
 
-## 6. Entregas
+## 7. Entregas
 
 1. `spotify-ouca-o-que-voce-sente_30s_1080p30.mp4` (com motion blur)
 2. `spotify-ouca-o-que-voce-sente_30s_1080p60.mp4`
 3. Folha de quadros (contact sheet) e projeto HyperFrames editável em `/home/user/hf-studio/spotify-ad`
 
-## 7. O que ainda melhoraria o resultado (opcional)
+## 8. Pendências
 
-- **Prints reais do app Spotify no iPhone** (busca, player, DJ e Wrapped) para reconstruir a interface com fidelidade.
-- Sem eles, reconstruo pela identidade visual pública do app.
+- Prints do app: **recebidos** (6 telas).
+- DJ / playlist por IA e Wrapped: reconstruídos pelo padrão visual público do app (sem print).
+- Capas fictícias: gerar 6 no Studio (~4 cr) antes da produção.
