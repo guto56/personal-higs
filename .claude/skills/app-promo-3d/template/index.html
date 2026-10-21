@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<title>Comercial — template app-promo-3d</title>
+<script src="lib/gsap.min.js"></script>
+<script src="lib/three.min.js"></script>
+<script src="lib/GLTFLoader.js"></script>
+<script src="lib/motion-lite.js"></script>
+<script src="lib/engine.js"></script>
+<style>
+  @font-face { font-family: "Figtree"; font-weight: 400; src: url("assets/fonts/figtree-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Figtree"; font-weight: 500; src: url("assets/fonts/figtree-latin-500-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Figtree"; font-weight: 600; src: url("assets/fonts/figtree-latin-600-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Figtree"; font-weight: 700; src: url("assets/fonts/figtree-latin-700-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Figtree"; font-weight: 800; src: url("assets/fonts/figtree-latin-800-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Figtree"; font-weight: 900; src: url("assets/fonts/figtree-latin-900-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Figtree"; font-weight: 400; src: url("assets/fonts/figtree-latin-ext-400-normal.woff2") format("woff2"); unicode-range: U+0100-024F; }
+
+  /* ===== TOKENS DA MARCA (troque por vídeo) ===== */
+  :root { --brand: #8b5cff; --brand2: #4cc9f0; --bg: #0e0e12; --card: #1b1b22; --text2: #a9a9b6; }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+  #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #000; font-family: "Figtree", sans-serif; color: #fff; }
+  #stage { position: absolute; inset: 0; overflow: hidden; }
+  .full { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  .abs { position: absolute; }
+  svg.ic { display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ===== ENGINE: tela do celular (não mude tamanhos) ===== */
+  #gl { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  #scr { position: absolute; left: 0; top: 0; width: 1170px; height: 2532px; transform-origin: 0 0; }
+  #ui { position: absolute; left: 0; top: 0; width: 390px; height: 844px; zoom: 3; border-radius: 55px; overflow: hidden; background: #000; }
+  .pg { position: absolute; left: 0; top: 0; width: 390px; height: 844px; overflow: hidden; }
+  .status { position: absolute; left: 0; top: 0; width: 390px; height: 50px; z-index: 50; }
+  .status .tm { position: absolute; left: 44px; top: 16px; font: 700 16px Figtree; }
+  .status .rt { position: absolute; right: 30px; top: 18px; display: flex; gap: 6px; align-items: center; }
+  .island { position: absolute; left: 132px; top: 11px; width: 126px; height: 37px; border-radius: 20px; background: #000; z-index: 60; }
+  #glare { position: absolute; inset: 0; z-index: 90; pointer-events: none; mix-blend-mode: screen; }
+  .app { position: absolute; width: 62px; height: 62px; }
+  .app .ico { position: absolute; inset: 0; border-radius: 15px; overflow: hidden; background-size: cover; background-position: center;
+     box-shadow: 0 6px 14px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.18); }
+  .app .ico::after { content: ""; position: absolute; inset: 0; border-radius: 15px; background: linear-gradient(155deg, rgba(255,255,255,.38), rgba(255,255,255,0) 38%, rgba(255,255,255,0) 70%, rgba(255,255,255,.14)); }
+  .app .lb { position: absolute; left: -20px; width: 102px; top: 67px; text-align: center; font: 600 11.5px Figtree; color: rgba(255,255,255,.92); text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  #kbd { position: absolute; left: 4px; top: 520px; width: 382px; height: 324px; border-radius: 36px 36px 50px 50px; z-index: 40;
+     background: rgba(44,44,46,.86); box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.08), 0 -10px 30px rgba(0,0,0,.35); }
+  .key { position: absolute; height: 42px; border-radius: 9px; background: rgba(255,255,255,.22); color: #fff; font: 400 22px Figtree; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 0 rgba(0,0,0,.35); }
+  .key.dk { background: rgba(255,255,255,.1); font-size: 15px; }
+  .key .pop { position: absolute; left: 50%; bottom: 34px; width: 46px; height: 54px; margin-left: -23px; border-radius: 12px; background: #6b6b70; font: 400 30px Figtree; display: flex; align-items: center; justify-content: center; opacity: 0; }
+  #ptr { position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; z-index: 80; background: rgba(150,150,150,.55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.65), 0 2px 8px rgba(0,0,0,.35); }
+  #rip { position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; z-index: 79; border: 2px solid rgba(255,255,255,.8); opacity: 0; }
+  .glass { background: linear-gradient(160deg, rgba(255,255,255,.16), rgba(255,255,255,.05)); box-shadow: inset 0 1.5px 0 rgba(255,255,255,.55), inset 0 0 0 1.5px rgba(255,255,255,.18), 0 40px 120px rgba(0,0,0,.55); }
+
+  /* ===== CENA (reescreva por vídeo) ===== */
+  #pHome { background: #05040a; }
+  .wall { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 40% at 28% 18%, rgba(139,92,255,.45), transparent 70%), radial-gradient(ellipse 70% 45% at 85% 78%, rgba(76,201,240,.30), transparent 70%), linear-gradient(180deg, #0b0718, #030206); }
+  .brandIco { background: linear-gradient(145deg, var(--brand), var(--brand2)) !important; display: flex; align-items: center; justify-content: center; font: 900 34px Figtree; color: #fff; }
+  #win { position: absolute; background: var(--bg); overflow: hidden; z-index: 30; display: flex; align-items: center; justify-content: center; }
+  #pApp { background: var(--bg); }
+  #field { position: absolute; left: 16px; top: 64px; width: 358px; height: 44px; border-radius: 12px; background: #24242c; display: flex; align-items: center; gap: 8px; padding: 0 12px; font: 500 16px Figtree; }
+  #caret { display: inline-block; width: 2px; height: 20px; background: var(--brand); vertical-align: -4px; margin-left: 1px; }
+  .res { position: absolute; left: 16px; width: 358px; height: 70px; border-radius: 16px; background: var(--card); padding: 14px 16px; }
+  .res b { display: block; font: 700 16px Figtree; } .res span { font: 500 13.5px Figtree; color: var(--text2); }
+  .res i { position: absolute; right: 14px; top: 20px; width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(145deg, var(--brand), var(--brand2)); }
+  #head { position: absolute; left: 130px; top: 470px; font: 500 72px Figtree; letter-spacing: -1.5px; white-space: nowrap; }
+  #big { position: absolute; left: 130px; top: 450px; font: 900 96px Figtree; letter-spacing: -3px; white-space: nowrap; }
+  #endc { background: var(--bg); }
+  #endLogo { position: absolute; left: 0; top: 400px; width: 1920px; text-align: center; font: 900 150px Figtree; letter-spacing: -5px; }
+  #endLogo b { background: linear-gradient(90deg, var(--brand), var(--brand2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #endSlogan { position: absolute; left: 0; top: 620px; width: 1920px; text-align: center; font: 600 44px Figtree; color: #d8d8e4; }
+  #flash { background: radial-gradient(circle at 50% 50%, #fff 0%, rgba(139,92,255,.8) 35%, rgba(139,92,255,0) 72%); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="12" data-width="1920" data-height="1080">
+  <audio id="mix" src="assets/audio/mix.mp3" data-start="0" data-duration="12" data-track-index="9" data-volume="1"></audio>
+  <div id="stage" class="clip" data-start="0" data-duration="12" data-track-index="0">
+    <canvas id="gl" width="1920" height="1080"></canvas>
+    <div id="scr"><div id="ui">
+      <div id="pHome" class="pg"><div class="wall"></div><div id="grid"></div></div>
+      <div id="win"><div class="abs brandIco" id="winIco" style="width:84px;height:84px;border-radius:22px;position:relative">A</div></div>
+      <div id="pApp" class="pg">
+        <div class="abs" style="left:16px;top:20px;font:800 13px Figtree;color:var(--text2)"></div>
+        <div id="field"><svg class="ic" viewBox="0 0 24 24" style="width:20px;height:20px;color:var(--text2)"><path d="M12 2c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z"/></svg><span><span id="ftx"></span><span id="caret"></span></span></div>
+        <div id="results"></div>
+      </div>
+      <div class="status"><div class="tm">9:41</div><div class="rt">
+        <svg width="19" height="12" viewBox="0 0 19 12"><rect x="0" y="8" width="3.4" height="4" rx="1" fill="#fff"/><rect x="5" y="5.5" width="3.4" height="6.5" rx="1" fill="#fff"/><rect x="10" y="3" width="3.4" height="9" rx="1" fill="#fff"/><rect x="15" y="0" width="3.4" height="12" rx="1" fill="#fff"/></svg>
+        <svg width="27" height="13" viewBox="0 0 27 13"><rect x=".7" y=".7" width="22.6" height="11.6" rx="3.6" stroke="rgba(255,255,255,.45)" stroke-width="1.2" fill="none"/><rect x="2.6" y="2.6" width="16" height="7.8" rx="2" fill="#fff"/></svg>
+      </div></div>
+      <div id="kbd"></div>
+      <div id="rip"></div><div id="ptr"></div>
+      <div class="island"></div><div id="glare"></div>
+    </div></div>
+
+    <div id="head"></div>
+    <div id="big"></div>
+    <div id="endc" class="full"><div id="endLogo"><b>Aurora</b></div><div id="endSlogan"></div></div>
+    <div id="flash" class="full"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var E = OM.ease, seg = OM.seg, sstep = OM.sstep, lerp = OM.lerp, spring = OM.spring;
+  var css = ENG.css, vis = ENG.vis, h = ENG.h, track = ENG.track, S = ENG.S, Wp = ENG.Wp, SFX = ENG.SFX;
+  var $ = function (id) { return document.getElementById(id); };
+  var DUR = 12, BPM = 120, BEAT = 60 / BPM, DROP = 8.0;   // troque pelos valores de scripts/analyze_music.py
+
+  var stage = new ENG.Stage({ canvas: $("gl"), screenEl: $("scr"), glow: [0.30, 0.18, 0.62], body: 0x1b1d20 });
+
+  // ── tela: home do iOS ──
+  var ICONS = ["calendar", "photos", "weather", "messages", "files", "stocks", "home", "books", "fitness", "translate", "watch", "contacts"];
+  var LABELS = ["Calendário", "Fotos", "Clima", "Mensagens", "Arquivos", "Bolsa", "Casa", "Livros", "Fitness", "Traduzir", "Relógio", "Contatos"];
+  var GX = [32, 120, 208, 296], GY = [74, 170, 266, 362], appEls = [];
+  ICONS.concat(["brand"]).forEach(function (ic, i) {
+    var a = h("div", "app"); a.style.left = GX[i % 4] + "px"; a.style.top = GY[Math.floor(i / 4)] + "px";
+    var c = h("div", "ico" + (ic === "brand" ? " brandIco" : ""), ic === "brand" ? "A" : "");
+    if (ic !== "brand") c.style.backgroundImage = "url(assets/icons/" + ic + ".jpg)";
+    a.appendChild(c); a.appendChild(h("div", "lb", ic === "brand" ? "Aurora" : LABELS[i])); $("grid").appendChild(a); appEls.push(a);
+  });
+  var BRAND_I = ICONS.length, BU = GX[BRAND_I % 4] + 31, BV = GY[Math.floor(BRAND_I / 4)] + 31;   // centro do ícone do app
+
+  // ── tela: app ──
+  var Q = "resuma minha semana", K = ENG.keyTimes(Q, 5.2, 6.5, 7);
+  var RES = [["Segunda", "3 reuniões · 1 entrega"], ["Quarta", "Treino batido: 5 km"], ["Sexta", "Viagem confirmada ✈"]];
+  var resEls = RES.map(function (r, i) { var e = h("div", "res", "<b>" + r[0] + "</b><span>" + r[1] + "</span><i></i>"); e.style.top = (130 + i * 84) + "px"; $("results").appendChild(e); return e; });
+  var kb = ENG.buildKeyboard($("kbd"), '<svg class="ic" viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>');
+  var TAPS = [{ t: 4.1, u: BU, v: BV, size: 22, tin: 3.85, tout: 4.25, from: [300, 640] }];
+
+  // ── textos 2D ──
+  var headW = ENG.words($("head"), ["Sua", " semana", " inteira,"]), headT = [0.8, 1.05, 1.3];
+  var bigW = ENG.words($("big"), ["em", " um", " toque."]), bigT = [DROP, DROP + BEAT, DROP + 2 * BEAT];
+
+  // ── câmera (alvo, log da distância, guinada, inclinação, deslocamento do quadro) ──
+  var CAM_T = [[0, Wp(0, 0.1, 0)], [2.2, Wp(0, 0.03, 0), E.sineInOut], [3.0, S(BU, BV), E.cubicInOut], [4.15, S(BU, BV)],
+    [4.9, Wp(0, 0.02, 0), E.cubicInOut], [5.25, S(140, 86), E.cubicInOut], [6.6, S(250, 86)], [7.3, S(195, 250), E.cubicInOut], [7.98, S(195, 250)],
+    [8.0, Wp(0, 0.05, 0)], [10.4, Wp(0, 0, 0), E.sineInOut]];
+  var CAM_D = [[0, Math.log(10.5)], [2.2, Math.log(7.4), E.sineInOut], [3.0, Math.log(1.5), E.cubicInOut], [4.15, Math.log(1.35), E.sineInOut],
+    [4.9, Math.log(6.2), E.cubicInOut], [5.25, Math.log(0.9), E.cubicInOut], [6.6, Math.log(0.85)], [7.3, Math.log(3.2), E.cubicInOut], [7.98, Math.log(2.9)],
+    [8.0, Math.log(7.2)], [10.4, Math.log(6.8), E.sineInOut]];
+  var CAM_YAW = [[0, 0.16], [2.2, 0.05, E.sineInOut], [3.0, 0], [4.9, 0], [5.25, -0.1], [7.3, -0.2], [7.98, -0.2], [8.0, -0.6], [10.4, 0.4, E.sineInOut]];
+  var CAM_PIT = [[0, 0.1], [2.2, 0.05], [3.0, 0], [5.25, 0.04], [7.3, 0.08], [8.0, 0.06], [10.4, 0.12]];
+  var CAM_FX = [[0, 0.2], [2.2, 0.19], [3.0, 0, E.cubicInOut], [7.98, 0], [8.0, 0.22], [10.4, 0.22]];
+  var PH_RY = [[0, -0.66], [2.2, -0.44, E.sineInOut], [3.0, 0, E.cubicInOut]];
+
+  // ── SFX (scripts/mix.py lê window.__sfx) ──
+  SFX.add("whoosh-cinematic", 0.05, 0.45, { dur: 2.2 }).add("whoosh", 2.3, 0.6).add("click", 4.1, 0.75).add("whoosh-cinematic", 4.15, 0.5, { dur: 1.1 })
+     .add("whoosh-short", 4.95, 0.35).keys(K, 0.3).add("pop", 6.9, 0.25).add("pop", 7.05, 0.25).add("pop", 7.2, 0.25)
+     .add("riser", 6.95, 0.3, { dur: 1.0 }).add("impact-bass-1", DROP, 0.9).add("whoosh-short", 10.45, 0.4).add("chime", 10.6, 0.35);
+  SFX.publish();
+
+  function screenUI(T) {
+    var homeOn = T < 4.9; vis($("pHome"), homeOn);
+    if (homeOn) {
+      var rec = sstep(4.15, 4.6, T);
+      appEls.forEach(function (a, i) { if (i !== BRAND_I) css(a, { s: 1 - 0.12 * rec, op: 1 - rec }); });
+      css(appEls[BRAND_I], { s: 1 - 0.16 * ENG.tapPulse(T, 4.1) });
+    }
+    var wk = E.expoOut(seg(T, 4.12, 4.75)), win = $("win"); vis(win, T >= 4.12 && T < 5.2);
+    win.style.left = lerp(BU - 31, 0, wk) + "px"; win.style.top = lerp(BV - 31, 0, wk) + "px";
+    win.style.width = lerp(62, 390, wk) + "px"; win.style.height = lerp(62, 844, wk) + "px"; win.style.borderRadius = lerp(15, 55, wk) + "px";
+    win.style.opacity = 1 - sstep(4.95, 5.15, T);
+    var appOn = T >= 4.9; vis($("pApp"), appOn);
+    if (appOn) {
+      $("pApp").style.opacity = sstep(4.9, 5.1, T);
+      var n = ENG.typed(T, K); $("ftx").textContent = Q.slice(0, n);
+      $("caret").style.opacity = (n < Q.length || Math.floor(T * 2.4) % 2 === 0) ? 1 : 0;
+      resEls.forEach(function (r, i) { var t0 = 6.9 + i * 0.15, k = spring(T - t0, 0.62, 18); css(r, { op: T < t0 ? 0 : Math.min(1, k * 1.5), y: (1 - k) * -20 }); });
+    }
+    var kU = E.expoOut(seg(T, 4.95, 5.2)) * (1 - E.cubicInOut(seg(T, 6.7, 6.95))); vis($("kbd"), kU > 0.001);
+    if (kU > 0.001) { css($("kbd"), { y: (1 - kU) * 340 }); kb.press(T, K, Q); }
+    ENG.pointer(T, $("ptr"), $("rip"), TAPS);
+  }
+
+  function render(T) {
+    stage.setPhone({ y: Math.sin(T * 1.3) * 0.02, ry: track(T, PH_RY) });
+    var tgt = stage.trackP(T, CAM_T);
+    var d = Math.exp(track(T, CAM_D));
+    if (T >= DROP) d *= 1 - 0.03 * ENG.beatPulse(T, DROP, BEAT);
+    // fundo e luz
+    var flood = sstep(DROP - 0.01, DROP + 0.25, T);
+    stage.bg.uFlood.value = flood; stage.bg.uBeat.value = T >= DROP ? ENG.beatPulse(T, DROP, BEAT) : 0.3;
+    stage.bg.uSweep.value = lerp(-0.3, 1.3, E.sineInOut(seg(T, 0.1, 1.6))); stage.bg.uDark.value = 1 - sstep(0, 0.5, T);
+    var ok = stage.render(T, { target: tgt, dist: d, yaw: track(T, CAM_YAW), pitch: track(T, CAM_PIT), fx: track(T, CAM_FX), shake: T >= DROP ? Math.exp(-(T - DROP) * 7) : 0 });
+    var scrOn = ok && T < 10.6; vis($("scr"), scrOn); vis($("gl"), T < 10.6);
+    $("ui").style.filter = T < 0.75 ? "brightness(" + sstep(0.4, 0.75, T) + ")" : "none";
+    if (scrOn) screenUI(T);
+    // textos
+    vis($("head"), T < 3); var out = sstep(2.3, 2.7, T);
+    headW.forEach(function (w, i) { var r = OM.wordRise(T, headT[i], { dist: 34 }); css(w, { y: r.y - out * 40, s: r.s, op: (T < headT[i] ? 0 : r.op) * (1 - out), blur: out * 10 }); });
+    vis($("big"), T >= DROP && T < 10.6);
+    bigW.forEach(function (w, i) { var r = OM.wordRise(T, bigT[i], { dist: 50 }); css(w, { y: r.y, s: r.s, op: (T < bigT[i] ? 0 : r.op) * (1 - sstep(10.3, 10.55, T)) }); });
+    // flash do drop e cartela final
+    var fl = T >= DROP ? Math.exp(-(T - DROP) * 5.5) : 0; vis($("flash"), fl > 0.01); $("flash").style.opacity = fl;
+    vis($("endc"), T >= 10.45); $("endc").style.opacity = sstep(10.45, 10.65, T);
+    var lk = spring(T - 10.55, 0.6, 16); css($("endLogo"), { s: 0.9 + 0.1 * lk, op: Math.min(1, lk * 1.4) });
+    $("endSlogan").textContent = "Organize o que importa."; css($("endSlogan"), { op: sstep(10.9, 11.2, T), y: 16 * (1 - sstep(10.9, 11.25, T)) });
+  }
+
+  Promise.all([stage.ready, document.fonts.load("500 72px Figtree"), document.fonts.load("900 96px Figtree"), document.fonts.load("700 16px Figtree")]).then(function () {
+    var tl = gsap.timeline({ paused: true }), P = { t: 0 };
+    tl.fromTo(P, { t: 0 }, { t: DUR, duration: DUR, ease: "none", onUpdate: function () { render(P.t); } }, 0);
+    render(0);
+    window.__render = render; window.__duration = DUR;
+    window.__timelines = window.__timelines || {}; window.__timelines["main"] = tl;
+  });
+})();
+</script>
+</body>
+</html>
